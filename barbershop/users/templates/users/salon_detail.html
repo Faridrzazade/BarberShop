@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ salon.name }} - Salon Details</title>
+    <link rel="stylesheet" href="{% static 'users/salon_detail.css' %}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{ salon.name }}</h1>
+            <p>{{ salon.address }}</p>
+            <img src="{{ salon.image.url }}" alt="{{ salon.name }}" class="salon-image">
+        </header>
+
+        <div class="details">
+            <h2>Services Offered</h2>
+            <ul>
+                {% for service in services %}
+                    <li>{{ service.name }} - {{ service.price }}</li>
+                {% empty %}
+                    <li>No services available.</li>
+                {% endfor %}
+            </ul>
+
+            <h2>Barbers</h2>
+            <ul>
+                {% for barber in barbers %}
+                    <li>
+                        <a href="{% url 'barber_detail' barber.id %}">
+                            {{ barber.first_name }} {{ barber.last_name }}
+                        </a>
+                    </li>
+                {% empty %}
+                    <li>No barbers available in this salon.</li>
+                {% endfor %}
+            </ul>
+
+            <!-- Sosial bağlantılar bölməsi -->
+            <h2>Social Links</h2>
+            {% if salon.sosial_links %}
+                <p>
+                    {% if salon.sosial_links.tiktok_username %}
+                        TikTok: <a href="{{ salon.sosial_links.tiktok_link }}" target="_blank">{{ salon.sosial_links.tiktok_username }}</a><br>
+                    {% endif %}
+                    {% if salon.sosial_links.instagram_username %}
+                        Instagram: <a href="{{ salon.sosial_links.instagram_link }}" target="_blank">{{ salon.sosial_links.instagram_username }}</a>
+                    {% endif %}
+                </p>
+            {% else %}
+                <p>No social links available.</p>
+            {% endif %}
+        </div>
+
+        <footer>
+            <a href="{% url 'home' %}">Back to Home</a>
+        </footer>
+    </div>
+</body>
+</html>

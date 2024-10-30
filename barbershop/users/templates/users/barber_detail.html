@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ barber.first_name }} {{ barber.last_name }} - Barber Details</title>
+    <link rel="stylesheet" href="{% static 'users/barber_detail.css' %}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{ barber.first_name }} {{ barber.last_name }}</h1>
+            <img src="{{ barber.image.url }}" alt="{{ barber.first_name }}" class="barber-image">
+        </header>
+
+        <div class="details">
+            <h2>Services Provided</h2>
+            <ul>
+                {% for service in services %}
+                    <li>{{ service.name }} - {{ service.price }}</li>
+                {% empty %}
+                    <li>No services available.</li>
+                {% endfor %}
+            </ul>
+
+            <h2>Working Salons</h2>
+            <ul>
+                {% for salon in salons %}
+                    <li>
+                        <a href="{% url 'salon_detail' salon.id %}">
+                            {{ salon.name }}
+                        </a>
+                    </li>
+                {% empty %}
+                    <li>No associated salons.</li>
+                {% endfor %}
+            </ul>
+
+            <h2>Social Links</h2> <!-- Yeni bölmə əlavə edildi -->
+            <p>TikTok: <a href="{{ barber.sosial_links.tiktok_link }}" target="_blank">{{ barber.sosial_links.tiktok_username }}</a></p>
+            <p>Instagram: <a href="{{ barber.sosial_links.instagram_link }}" target="_blank">{{ barber.sosial_links.instagram_username }}</a></p>
+        </div>
+
+        <footer>
+            <a href="{% url 'home' %}">Back to Home</a>
+        </footer>
+    </div>
+</body>
+</html>
