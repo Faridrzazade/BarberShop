@@ -1,6 +1,7 @@
 from django import forms
-from salons.models import Salon
-from users.models import Barber
+from salons.models import *
+from users.models import *
+
 
 class SalonForm(forms.ModelForm):
     class Meta:
@@ -39,5 +40,30 @@ class RegisterForm(forms.ModelForm):
 
         if password and confirm_password and password != confirm_password:
             raise forms.ValidationError('Şifrələr uyğun gəlmir.')
+
+        return cleaned_data
+
+
+class BarberRegistrationForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput)
+    confirm_password = forms.CharField(widget=forms.PasswordInput)
+
+    class Meta:
+        model = Barber
+        fields = ['first_name', 'last_name', 'phone_number', 'email', 'address', 'image', 'description', 'services', 'salons', 'social_links']
+
+    phone = forms.CharField(max_length=15)
+    gender = forms.ChoiceField(choices=[('male', 'Kişi'), ('female', 'Qadın'), ('other', 'Digər')])
+    birth_date = forms.DateField()
+    sosial_links = forms.ModelChoiceField(queryset=SosialLinks.objects.all())
+    salons = forms.ModelMultipleChoiceField(queryset=Salon.objects.all())
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        confirm_password = cleaned_data.get('confirm_password')
+
+        if password and confirm_password and password != confirm_password:
+            raise forms.ValidationError('��ifrələr uyğun gəlmir.')
 
         return cleaned_data

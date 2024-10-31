@@ -19,7 +19,14 @@
             <h2>Services Offered</h2>
             <ul>
                 {% for service in services %}
-                    <li>{{ service.name }} - {{ service.price }}</li>
+                    <li>
+                        {{ service.name }} - 
+                        {% if service.price %}
+                            {{ service.price }}
+                        {% else %}
+                            Ödənişsiz
+                        {% endif %}
+                    </li>
                 {% empty %}
                     <li>No services available.</li>
                 {% endfor %}
@@ -38,7 +45,6 @@
                 {% endfor %}
             </ul>
 
-            <!-- Sosial bağlantılar bölməsi -->
             <h2>Social Links</h2>
             {% if salon.sosial_links %}
                 <p>

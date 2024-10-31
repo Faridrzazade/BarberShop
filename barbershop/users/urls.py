@@ -31,4 +31,6 @@ urlpatterns = [
     path('register_choices', views.register_choices, name='register_choices')
 
 
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

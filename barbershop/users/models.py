@@ -1,5 +1,8 @@
-from django.db import models
+
+from django.db.models.signals import m2m_changed
 from django.contrib.auth.models import User
+from django.dispatch import receiver
+from django.db import models
 
 
 class SosialLinks(models.Model):
@@ -17,7 +20,6 @@ class SosialLinks(models.Model):
 
 
 
-# İstifadəçi dataları Bərbər qismində. 
 class Barber(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -26,17 +28,26 @@ class Barber(models.Model):
     address = models.CharField(max_length=255)
     image = models.ImageField(upload_to='media/barber')
     description = models.TextField()
-    services = models.ForeignKey('services.Services', on_delete=models.SET_NULL, null=True, blank=True, related_name='barbers_list')
-    salons = models.ForeignKey('salons.Salon', on_delete=models.SET_NULL, blank=True, null=True, related_name='barbers_list')
+    services = models.ManyToManyField('services.BarberServices', related_name='barbers_list', blank=True)
+    salons = models.ManyToManyField('salons.Salon', blank=True, related_name='barbers_in_salon')
     sosial_links = models.ForeignKey('users.SosialLinks', on_delete=models.CASCADE, null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        if self.salons:
-            self.address = self.salons.address
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+
+@receiver(m2m_changed, sender=Barber.salons.through)
+def update_address(sender, instance, action, **kwargs):
+    """
+    Barber modelində salons sahəsi dəyişdirildikdə address sahəsini yeniləyir.
+    """
+    if action == 'post_add' or action == 'post_remove' or action == 'post_clear':
+        if instance.salons.exists():
+            instance.address = ', '.join(salon.address for salon in instance.salons.all())
+        else:
+            instance.address = ''  # Heç bir salon yoxdursa, address boş qoyulur.
+        instance.save()
+
 
 
 class Profile(models.Model):

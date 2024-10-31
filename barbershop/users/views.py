@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate, login
 from users.models import User, Barber, Profile
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
-from services.models import Services
+from services.models import *
 from rest_framework import viewsets
 from django.contrib import messages
 from salons.models import Salon
@@ -84,7 +84,7 @@ def register_salon(request):
         salon.save()
 
         for service in services:
-            services_obj = Services.objects.get(id=service)
+            services_obj = SalonServices.objects.get(id=service)
             salon.services.add(services_obj)
         
         if barbers:
@@ -132,6 +132,10 @@ def register_barber(request):
         if Barber.objects.filter(username=username).exists():
             messages.error(request, 'Bu Barber adı artıq mövcuddur.')
             return render(request, 'users/register_barber.html')
+
+        for service in services:
+            services_obj = BarberServices.objects.get(id=service)
+            salon.services.add(services_obj)
 
         barber = Barber(username=username, email=email)
         barber.set_password(password)  # Şifrəni burada təyin edirik
@@ -258,8 +262,8 @@ def home(request):
 @login_required
 def salon_detail(request, pk):
     salon = get_object_or_404(Salon, pk=pk)
-    services = Services.objects.filter(salons=salon)
-    barbers = Barber.objects.filter(salons=salon)
+    services = salon.services.all()
+    barbers = Barber.objects.filter(salons=salon)  
     return render(request, 'users/salon_detail.html', {
         'salon': salon,
         'services': services,
@@ -267,15 +271,17 @@ def salon_detail(request, pk):
     })
 
 
+@login_required
 def barber_detail(request, pk):
     barber = get_object_or_404(Barber, pk=pk)
-    services = Services.objects.filter(barbers=barber)
-    salons = Salon.objects.filter(barbers=barber)
+    services = barber.services.all()  
+    salons = barber.salons  
     return render(request, 'users/barber_detail.html', {
         'barber': barber,
         'services': services,
         'salons': salons,
     })
+
 
 
 def login_register(request):

@@ -17,7 +17,7 @@
         <div class="details">
             <h2>Services Provided</h2>
             <ul>
-                {% for service in services %}
+                {% for service in barber.services.all %}  {# Change 'services' to 'barber.services.all' #}
                     <li>{{ service.name }} - {{ service.price }}</li>
                 {% empty %}
                     <li>No services available.</li>
@@ -26,7 +26,7 @@
 
             <h2>Working Salons</h2>
             <ul>
-                {% for salon in salons %}
+                {% for salon in barber.salons.all %}
                     <li>
                         <a href="{% url 'salon_detail' salon.id %}">
                             {{ salon.name }}
@@ -37,9 +37,21 @@
                 {% endfor %}
             </ul>
 
-            <h2>Social Links</h2> <!-- Yeni bölmə əlavə edildi -->
-            <p>TikTok: <a href="{{ barber.sosial_links.tiktok_link }}" target="_blank">{{ barber.sosial_links.tiktok_username }}</a></p>
-            <p>Instagram: <a href="{{ barber.sosial_links.instagram_link }}" target="_blank">{{ barber.sosial_links.instagram_username }}</a></p>
+            <h2>Social Links</h2>
+            <p>TikTok: 
+                {% if barber.sosial_links %}
+                    <a href="{{ barber.sosial_links.tiktok_link }}" target="_blank">{{ barber.sosial_links.tiktok_username }}</a>
+                {% else %}
+                    No TikTok link available.
+                {% endif %}
+            </p>
+            <p>Instagram: 
+                {% if barber.sosial_links %}
+                    <a href="{{ barber.sosial_links.instagram_link }}" target="_blank">{{ barber.sosial_links.instagram_username }}</a>
+                {% else %}
+                    No Instagram link available.
+                {% endif %}
+            </p>
         </div>
 
         <footer>

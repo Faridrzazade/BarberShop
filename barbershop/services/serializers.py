@@ -1,7 +1,17 @@
 from rest_framework import serializers
-from .models import Services
+from .models import SalonServices, BarberServices, PriceCurency
 
-class ServicesSerializer(serializers.ModelSerializer):
+class SalonServicesSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Services
+        model = SalonServices
+        fields = '__all__'
+
+class BarberServicesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BarberServices
+        fields = '__all__'
+
+class PriceCurencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PriceCurency
         fields = '__all__'
