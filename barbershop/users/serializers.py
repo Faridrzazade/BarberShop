@@ -13,7 +13,3 @@ class BarberSerializer(serializers.ModelSerializer):
         model = Barber
         fields = '__all__'
 
-class SosialLinksSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SosialLinks
-        fields = '__all__'

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barber Qeydiyyatı</title>
-    <link rel="stylesheet" href="{% static 'users/register_barber.css' %}">
+    <link rel="stylesheet" href="{% static 'users/register_user.css' %}">
 </head>
 <body>
     <div class="btn">
@@ -13,56 +13,27 @@
     </div>
     <div class="register-container">
         <h2>Barber Qeydiyyatı</h2>
-        <form method="post">
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            <div class="form-group">
-                <label for="username">Profil adı:</label>
-                <input type="text" id="username" name="username" required>
-            </div>
-            <div class="form-group">
-                <label for="email">E-mail:</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-                <label for="phone">Telefon Nömrəsi:</label>
-                <input type="tel" id="phone" name="phone" required>
-            </div>
-            <div class="form-group">
-                <label for="gender">Cinsi:</label>
-                <select id="gender" name="gender" required>
-                    <option value="male">Kişi</option>
-                    <option value="female">Qadın</option>
-                    <option value="other">Digər</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="birth_date">Doğum Tarixi:</label>
-                <input type="date" id="birth_date" name="birth_date" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Şifrə:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <div class="form-group">
-                <label for="confirm_password">Şifrəni Təkrarla:</label>
-                <input type="password" id="confirm_password" name="confirm_password" required>
-            </div>
-            <div class="form-group">
-                <label for="barber_name">Barberin Adı:</label>
-                <input type="text" id="barber_name" name="barber_name" required>
-            </div>
-            <div class="form-group">
-                <label for="services_barber">Xidmətlər:</label>
-                {% for service in services %}
-                    <textarea id="services_barber_{{ forloop.counter }}" name="services_barber_{{ forloop.counter }}" rows="4" required>{{ service }}</textarea>
-                {% endfor %}
-            </div>            
-            <div class="form-group">
-                <label for="address">Ünvan:</label>
-                <input type="text" id="address" name="address" required>
-            </div>
+            {{ form.as_p }}
+            
+            <!-- Səhvləri göstərmək üçün əlavə edilmiş kod -->
+            {% if form.errors %}
+                <ul class="errors">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            
             <button type="submit">Qeydiyyatdan Keç</button>
         </form>
+        
         {% if messages %}
             <ul class="messages">
                 {% for message in messages %}
@@ -70,7 +41,8 @@
                 {% endfor %}
             </ul>
         {% endif %}
-        <p>Artıq hesabınız var? <a href="{% url 'login_user' %}">Giriş Edin</a></p>
+        
+        <p>Bir hesabınız var? <a href="{% url 'login_user' %}">Giriş Edin</a></p>
     </div>
 </body>
 </html>

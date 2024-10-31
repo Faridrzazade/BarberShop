@@ -1,18 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import authenticate, login
-from users.models import User, Barber, Profile
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
-from services.models import *
 from rest_framework import viewsets
 from django.contrib import messages
 from salons.models import Salon
+from services.models import *
 from .serializers import *
+from users.models import *
+from users.forms import *
 from .models import *
-
 
 
 # API üçün ViewSet-lər
@@ -24,12 +24,11 @@ class BarberViewSet(viewsets.ModelViewSet):
     queryset = Barber.objects.all()
     serializer_class = BarberSerializer
 
-class SosialLinksViewSet(viewsets.ModelViewSet):
-    queryset = SosialLinks.objects.all()
-    serializer_class = SosialLinksSerializer
+
 
 
 # İstifadəçi daxil olma
+
 def login_user(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -39,121 +38,120 @@ def login_user(request):
         if user is not None:
             login(request, user)
 
-            # JWT tokenləri yaradın
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
+            # Burada token yaradılması və ya saxlanılması yoxdur
 
-            response = redirect('home')
-            response.set_cookie('access_token', access_token, httponly=True, secure=True, samesite='Lax')
-            response.set_cookie('refresh_token', refresh_token, httponly=True, secure=True, samesite='Lax')
-            
-            return response
+            return redirect('home')  # Uğurlu girişdən sonra ana səhifəyə yönləndirin
         else:
             messages.error(request, 'Yanlış istifadəçi adı və ya şifrə.')
-    
+
     return render(request, 'users/login_user.html')
 
 def register_salon(request):
     if request.method == 'POST':
-        name = request.POST.get('name')
-        address = request.POST.get('address')
-        phone = request.POST.get('phone')
-        services = request.POST.getlist('services')
-        barbers = request.POST.get('barbers')
-        sosial_links = request.POST.get('sosial_links')
-        password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
-        image = request.FILES.get('image')
-        description = request.POST.get('description')
-        # İstifadəçi adı yoxlanması
-        if not name:
-            messages.error(request, 'Salon adı daxil edilmelidir.')
-        # Şifrələrin uyğunluğunu yoxlama
-        if password!=confirm_password:
-            messages.error(request, 'Şifrələr uyğun deyil.')
-            return render(request, 'users/register_salon.html')
-        
-        if Salon.objects.filter(name=name).exists():
-            messages.error(request, 'Bu salon adı artıq mövcuddur.')
-            return render(request, 'users/register_salon.html')
-        
-        salon = Salon(name=name, address=address, phone_number=phone)
-        salon.set_password(password)
-        salon.name = name
-        salon.save()
+        form = SalonRegisterForm(request.POST, request.FILES)
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            address = form.cleaned_data['address']
+            phone = form.cleaned_data['phone']
+            services = form.cleaned_data['services']
+            barbers = form.cleaned_data.get('barbers')
+            image = form.cleaned_data['image']
+            description = form.cleaned_data['description']
+            password = form.cleaned_data['password']
+            tiktok_username = form.cleaned_data['tiktok_username']
+            instagram_username = form.cleaned_data['instagram_username']
 
-        for service in services:
-            services_obj = SalonServices.objects.get(id=service)
-            salon.services.add(services_obj)
-        
-        if barbers:
-            barber_obj = Barber.objects.get(id=barbers)
-            salon.barbers = barber_obj
-        profile = Profile.objects.create(
-            name=profile,
-            adress = adress,
-            phone = phone,
-            services = services,
-            sosial_links = sosial_links,
-            image = image,
-            description = description,
+            # Salon adının təkrar olmadığını yoxla
+            if Salon.objects.filter(name=name).exists():
+                messages.error(request, 'Bu salon adı artıq mövcuddur.')
+                return render(request, 'users/register_salon.html', {'form': form})
 
-        )
-        messages.success(request, 'Qeydiyyat uğurla tamamlandı.')
-        return redirect('home')
+            # Şifrəni şifrələyib yeni salon obyektini yarat
+            encrypted_password = make_password(password)
+            salon = Salon(name=name, address=address, phone=phone, password=encrypted_password)
+            salon.save()
+
+            # Salon xidmətlərini əlavə et
+            for service in services:
+                services_obj = SalonServices.objects.get(id=service)
+                salon.services.add(services_obj)
+
+            # Barber əlavə et, əgər seçilibsə
+            if barbers:
+                barber_obj = Barber.objects.get(id=barbers)
+                salon.barbers.add(barber_obj)
+
+            # Profil yarat
+            Profile.objects.create(
+                salon=salon,
+                address=address,
+                phone=phone,
+                tiktok_username=tiktok_username,
+                instagram_username=instagram_username,
+                image=image,
+                description=description,
+            )
+
+            messages.success(request, 'Qeydiyyat uğurla tamamlandı.')
+            return redirect('home')
+        else:
+            messages.error(request, 'Formda səhvlər var, zəhmət olmasa onları düzəldin.')
+    else:
+        form = SalonRegisterForm()
+
+    return render(request, 'users/register_salon.html', {'form': form})
     
-    return render(request, 'users/register_salon.html')       
-
 def register_barber(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        phone = request.POST.get('phone')
-        birth_date = request.POST.get('birth_date')
-        gender = request.POST.get('gender')
-        password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
-        barber_name = request.POST.get('barber_name')
-        services_barber = request.POST.get('services_barber') 
-        adress = request.POST.get('adress')       
-        # İstifadəçi adı yoxlanması
-        if not username:
-            messages.error(request, 'İstifadəçi adi daxil edilmelidir.')
-        # E-mail yoxlanması
-        if not email:
-            messages.error(request, 'E-mail daxil edilməlidir.')
-            return render(request, 'users/register_barber.html')
-        # Şifrələrin uyğunluğunu yoxlama
-        if password != confirm_password:
-            messages.error(request, 'Şifrələr uyğun deyil.')
-            return render(request, 'users/register_barber.html')
-        
-        if Barber.objects.filter(username=username).exists():
-            messages.error(request, 'Bu Barber adı artıq mövcuddur.')
-            return render(request, 'users/register_barber.html')
+        form = BarberRegisterForm(request.POST)
+        if form.is_valid():
+            # Yeni kullanıcı oluşturma
+            user = User.objects.create_user(
+                username=form.cleaned_data['email'],  # Kullanıcı adı olarak email kullanılabilir
+                email=form.cleaned_data['email'],
+            )
+            user.set_password(form.cleaned_data['password'])
+            user.save()
 
-        for service in services:
-            services_obj = BarberServices.objects.get(id=service)
-            salon.services.add(services_obj)
+            # Check if a Barber already exists for this user
+            if Barber.objects.filter(user=user).exists():
+                messages.error(request, 'Bu istifadəçi artıq barber kimi qeydiyyatdan keçib.')
+                return redirect('home')
 
-        barber = Barber(username=username, email=email)
-        barber.set_password(password)  # Şifrəni burada təyin edirik
-        barber.first_name = first_name  # Adı burada təyin edirik
-        barber.last_name = last_name  # Soyadı burada təyin edirik
-        barber.save()  # İstifadəçini bazaya əlavə edirik
+            # Create the Profile
+            profile = Profile.objects.create(
+                user=user,
+                name=form.cleaned_data['first_name'],  # Formdan alınan ismi kullan
+                phone=form.cleaned_data['phone_number'],  # Formdan alınan telefon numarasını kullan
+                # Diğer alanları formdan almak isteğe bağlı
+            )
 
+            # Create the Barber instance
+            barber = Barber.objects.create(
+                user=user,
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name'],
+                phone_number=form.cleaned_data['phone_number'],
+                email=form.cleaned_data['email'],
+                address=form.cleaned_data['address'],
+                description=form.cleaned_data['description'],
+                
+            )
 
-        profile = Profile.objects.create(
-            barber=barber, 
-            phone=phone,
-            services_barber=services_barber,
-            adress=adress,  
-        )
-        messages.success(request, 'Qeydiyyat uğurla tamamlandı.')
-        return redirect('home')
-    
-    return render(request, 'users/register_barber.html')
+            # Handle services if provided
+            services_barber = form.cleaned_data['services']  # Services from form
+            barber.services.add(*services_barber)
+
+            messages.success(request, 'Qeydiyyat uğurla tamamlandı.')
+            return redirect('home')
+        else:
+            messages.error(request, 'Zəhmət olmasa bütün xətaları düzəldin.')
+    else:
+        form = BarberRegisterForm()
+
+    services = BarberServices.objects.all()
+    return render(request, 'users/register_barber.html', {'form': form, 'services': services})
+
         
 def register_user(request):
     if request.method == 'POST':

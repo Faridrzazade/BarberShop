@@ -13,7 +13,6 @@
             <h1>{{ barber.first_name }} {{ barber.last_name }}</h1>
             <img src="{{ barber.image.url }}" alt="{{ barber.first_name }}" class="barber-image">
         </header>
-
         <div class="details">
             <h2>Services Provided</h2>
             <ul>
@@ -39,15 +38,15 @@
 
             <h2>Social Links</h2>
             <p>TikTok: 
-                {% if barber.sosial_links %}
-                    <a href="{{ barber.sosial_links.tiktok_link }}" target="_blank">{{ barber.sosial_links.tiktok_username }}</a>
+                {% if barber.tiktok_username %}
+                    <a href="{{ barber.tiktok_link }}" target="_blank">{{ barber.tiktok_username }}</a>
                 {% else %}
                     No TikTok link available.
                 {% endif %}
             </p>
             <p>Instagram: 
-                {% if barber.sosial_links %}
-                    <a href="{{ barber.sosial_links.instagram_link }}" target="_blank">{{ barber.sosial_links.instagram_username }}</a>
+                {% if barber.instagram_username %}
+                    <a href="{{ barber.instagram_link }}" target="_blank">{{ barber.instagram_username }}</a>
                 {% else %}
                     No Instagram link available.
                 {% endif %}

@@ -10,13 +10,12 @@ from . import views
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'barber', BarberViewSet)
-router.register(r'sosial-links', SosialLinksViewSet)
 
 
 
 urlpatterns = [
     path('api', include(router.urls)),
-    path('', views.home, name='home'),
+    path('', home, name='home'),
     path('login/', views.login_user, name='login_user'),
     path('register/', views.register_user, name='register_user'),
     path('edit-profile/', views.edit_profile, name='edit_profile'),
